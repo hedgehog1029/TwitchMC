@@ -82,11 +82,15 @@ public class PlayerListener implements Listener {
 				userCache.cacheUser(uuid);
 				event.allow();
 			} else {
-				var message = result.linked()
-						? "You don't have an active subscription to the streamer that owns this server! Please renew " +
-						"your subscription, or visit https://twitchmc.io if you need to link a different account."
-						: "You need to link your Twitch account in order to play on this server! Please " +
-						"visit https://twitchmc.io/connect and use code: %s".formatted(result.code());
+				var message = result.description();
+				if (message == null) {
+					logger.warning("Missing error message from server for access = false response");
+					message = "Missing error message from server - please report this to TwitchMC";
+				}
+
+				if (result.hasError()) {
+					logger.info("Login for %s failed - %s: %s".formatted(uuid, result.error(), message));
+				}
 
 				event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, message);
 			}
