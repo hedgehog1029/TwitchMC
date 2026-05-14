@@ -207,7 +207,7 @@ const checkAccess = async (req: NextApiRequest, res: NextApiResponse) => {
     res.send({
       access: false,
       linked: true,
-      description: `You don't have an active subscription to the streamer that owns this server! Please renew your subscription, or visit https://twitchmc.io if you need to link a different account.`,
+      description: `You don't have an active subscription to the streamer that owns this server! Please renew your subscription, or visit ${rootUrl} if you need to link a different account.`,
     });
     return;
   }
