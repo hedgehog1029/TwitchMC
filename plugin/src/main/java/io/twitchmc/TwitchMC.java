@@ -2,6 +2,9 @@ package io.twitchmc;
 
 import io.twitchmc.commands.CommandRegister;
 import io.twitchmc.commands.TwitchMCTabCompleter;
+import io.twitchmc.floodgate.FloodgatePlayerLink;
+import io.twitchmc.floodgate.IdentityPlayerMap;
+import io.twitchmc.floodgate.PlayerMap;
 import io.twitchmc.http.ApiClient;
 import io.twitchmc.scheduler.Scheduler;
 import org.bukkit.Bukkit;
@@ -21,7 +24,12 @@ public class TwitchMC extends JavaPlugin {
 		var apiClient = new ApiClient(apiDomain, this.getDescription().getVersion());
 		var scheduler = new Scheduler(this);
 
-		var playerListener = new PlayerListener(apiClient, configHolder);
+		PlayerMap playerMap = new IdentityPlayerMap();
+		if (Bukkit.getPluginManager().isPluginEnabled("floodgate")) {
+			playerMap = new FloodgatePlayerLink(getLogger());
+		}
+
+		var playerListener = new PlayerListener(apiClient, configHolder, playerMap);
 		getServer().getPluginManager().registerEvents(playerListener, this);
 
 		this.getCommand("twitchmc").setTabCompleter(new TwitchMCTabCompleter());

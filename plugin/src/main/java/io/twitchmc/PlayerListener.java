@@ -1,5 +1,6 @@
 package io.twitchmc;
 
+import io.twitchmc.floodgate.PlayerMap;
 import io.twitchmc.http.ApiClient;
 import io.twitchmc.util.UserCache;
 import net.milkbowl.vault.permission.Permission;
@@ -15,12 +16,14 @@ import java.io.IOException;
 public class PlayerListener implements Listener {
 	private final ApiClient apiClient;
 	private final ConfigHolder configHolder;
+	private final PlayerMap playerMap;
 	private final UserCache userCache;
 	private Permission permissionApi;
 
-	public PlayerListener(ApiClient apiClient, ConfigHolder configHolder) {
+	public PlayerListener(ApiClient apiClient, ConfigHolder configHolder, PlayerMap playerMap) {
 		this.apiClient = apiClient;
 		this.configHolder = configHolder;
+		this.playerMap = playerMap;
 		this.userCache = new UserCache();
 
 		this.permissionApi = Bukkit.getServicesManager().load(Permission.class);
@@ -36,7 +39,17 @@ public class PlayerListener implements Listener {
 
 	@EventHandler
 	public void onPlayerJoin(AsyncPlayerPreLoginEvent event) {
-		var uuid = event.getUniqueId();
+		try {
+			this.tryPlayerJoin(event);
+		} catch (Throwable t) {
+			event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+					"Error checking access permissions - please contact a server admin");
+			throw t;
+		}
+	}
+
+	public void tryPlayerJoin(AsyncPlayerPreLoginEvent event) {
+		var uuid = playerMap.getMappedUUID(event.getUniqueId());
 		var offlinePlayer = Bukkit.getOfflinePlayer(uuid);
 
 		if (canPlayerBypass(offlinePlayer)) {
