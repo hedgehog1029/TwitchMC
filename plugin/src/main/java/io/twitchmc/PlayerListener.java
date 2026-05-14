@@ -5,24 +5,27 @@ import io.twitchmc.http.ApiClient;
 import io.twitchmc.util.UserCache;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class PlayerListener implements Listener {
 	private final ApiClient apiClient;
 	private final ConfigHolder configHolder;
+	private final Logger logger;
 	private final PlayerMap playerMap;
 	private final UserCache userCache;
 	private Permission permissionApi;
 
-	public PlayerListener(ApiClient apiClient, ConfigHolder configHolder, PlayerMap playerMap) {
+	public PlayerListener(ApiClient apiClient, ConfigHolder configHolder, Logger logger, PlayerMap playerMap) {
 		this.apiClient = apiClient;
 		this.configHolder = configHolder;
+		this.logger = logger;
 		this.playerMap = playerMap;
 		this.userCache = new UserCache();
 
@@ -57,7 +60,7 @@ public class PlayerListener implements Listener {
 			return;
 		}
 
-		Bukkit.getLogger().info("%s%s has joined, checking access".formatted(ChatColor.BLUE, uuid));
+		logger.info("%s has joined, checking access".formatted(uuid));
 
 		boolean isServerVerified = !configHolder.getServerId().isBlank();
 
@@ -88,7 +91,7 @@ public class PlayerListener implements Listener {
 				event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_WHITELIST, message);
 			}
 		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Failed to check access permissions", e);
 
 			event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
 					"There was an error checking your access permissions - please try again later or contact a moderator.");
